@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator typegraphql {
+  provider = "typegraphql-prisma"
+  output   = "./generated/type-graphql"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Task {
+  task_id Int @id @default(autoincrement())
+  task_name String
+  done_flag Boolean
+  due_date DateTime
+  tags String
+  notes String
+  owner User @relation(fields: [owner_id], references: [user_id])
+  owner_id Int 
+  task_created_at DateTime @default(now())
+  deleted_flag Boolean
+}
+
+model User {
+  user_id Int @id @default(autoincrement())
+  user_name String
+  password String
+  email String
+  tasks Task[]
+}
+
+model City {
+  city_id Int @id @default(autoincrement())
+  city_name String
+  weather Weather[]
+}
+
+model Weather {
+  weather_id Int @id @default(autoincrement())
+  city_id Int
+  city City @relation(fields: [city_id], references: [city_id])
+  weather_detail String
+  weather_temperature Int
+}
