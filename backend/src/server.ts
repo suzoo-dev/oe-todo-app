@@ -3,14 +3,25 @@ import { createHandler } from "graphql-http/lib/use/express";
 import express, { Request, Response, NextFunction } from "express";
 import { ruruHTML } from "ruru/server";
 import { createSchema, prisma } from "./schema";
+import jwt from "jsonwebtoken";
+import { getEnvVar } from "./utils/getEnvVar";
 
 async function main() {
   const schema = await createSchema();
   const app = express();
 
-  // Add middleware for context
   app.use((req: Request, res: Response, next: NextFunction) => {
-    req.context = { prisma, user: null };
+    const token = req.headers.authorization?.split(" ")[1];
+    if (token) {
+      try {
+        const decoded: any = jwt.verify(token, getEnvVar("JWT_SECRET"));
+        req.context = { prisma, user: decoded.userId };
+      } catch (err) {
+        req.context = { prisma, user: null };
+      }
+    } else {
+      req.context = { prisma, user: null };
+    }
     next();
   });
 
