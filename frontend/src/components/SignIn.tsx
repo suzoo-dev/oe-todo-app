@@ -1,52 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import useQuery from "../hooks/useQuery";
 import { useAuth } from "../context/AuthContext";
 
 const SignIn: React.FC = () => {
-  const { signIn } = useAuth();
+  const [isRegistering, setIsRegistering] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     username: "",
     password: "",
     confirmPassword: "",
   });
-  const [isRegistering, setIsRegistering] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const { signIn } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const [executeQuery, { data, isLoading, error }] = useQuery<{
+    login: string;
+    signup: string;
+  }>();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const url = import.meta.env.VITE_API_URL || "http://localhost:4000/graphql";
     const mutation = isRegistering
       ? `mutation { signup(email: "${formData.email}", username: "${formData.username}", password: "${formData.password}", confirmPassword: "${formData.confirmPassword}") }`
       : `mutation { login(email: "${formData.email}", password: "${formData.password}") }`;
 
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: mutation }),
-      });
-      const data = await response.json();
-      if (data.errors) {
-        throw new Error(data.errors[0].message);
-      }
-      if (!isRegistering) {
-        signIn(data.data.login);
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("An unknown error occurred.");
+    await executeQuery(mutation);
+  };
+
+  useEffect(() => {
+    if (error) {
+      setErrorMessage(error);
+    } else if (data) {
+      const token = isRegistering ? data.signup : data.login;
+      if (token) {
+        signIn(token);
       }
     }
-  };
+  }, [data, error, isRegistering, signIn]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
@@ -59,6 +54,7 @@ const SignIn: React.FC = () => {
           get things done{String.fromCodePoint(0x2728)}
         </h2>
         {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+        {isLoading && <p className="text-gray-500">...loading</p>}
         <form onSubmit={handleSubmit}>
           <label>Enter your email</label>
           <input
@@ -72,7 +68,7 @@ const SignIn: React.FC = () => {
           />
           {isRegistering && (
             <>
-              <label>Enter your user name</label>
+              <label>Enter your username</label>
               <input
                 type="text"
                 name="username"
