@@ -1,6 +1,7 @@
 import { createServer } from "http";
 import { createHandler } from "graphql-http/lib/use/express";
 import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { ruruHTML } from "ruru/server";
 import { createSchema, prisma } from "./schema";
 import jwt from "jsonwebtoken";
@@ -9,6 +10,9 @@ import { getEnvVar } from "./utils/getEnvVar";
 async function main() {
   const schema = await createSchema();
   const app = express();
+
+  // Use CORS middleware
+  app.use(cors());
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization?.split(" ")[1];
