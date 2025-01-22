@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
+import { HiMenuAlt1, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi";
 
 const GET_USER_TASKS = gql`
   query GetUserTasks {
@@ -11,6 +12,22 @@ const GET_USER_TASKS = gql`
       notes
       done_flag
       deleted_flag
+    }
+  }
+`;
+
+const UPDATE_ONE_TASK = gql`
+  mutation UpdateOneTask(
+    $taskId: Int!
+    $doneFlag: BoolFieldUpdateOperationsInput
+    $deletedFlag: BoolFieldUpdateOperationsInput
+  ) {
+    updateOneTask(
+      data: { done_flag: $doneFlag, deleted_flag: $deletedFlag }
+      where: { task_id: $taskId }
+    ) {
+      task_id
+      done_flag
     }
   }
 `;
@@ -44,7 +61,7 @@ const Task: React.FC = () => {
   const [newTaskName, setNewTaskName] = useState<string>("");
   const [isAddingTask, setIsAddingTask] = useState<boolean>(false);
 
-  const { data, loading, error } = useQuery(GET_USER_TASKS);
+  const { data } = useQuery(GET_USER_TASKS);
 
   const [createUserTask] = useMutation(CREATE_USER_TASK, {
     onCompleted: (data) => {
@@ -53,6 +70,8 @@ const Task: React.FC = () => {
       }
     },
   });
+
+  const [updateOneTask] = useMutation(UPDATE_ONE_TASK);
 
   useEffect(() => {
     if (data?.getUserTasks) {
@@ -103,26 +122,71 @@ const Task: React.FC = () => {
       </div>
       <div>
         <h2 className="font-bold mb-4 text-xl">Tasks to do</h2>
-        <table className="w-full border-separate border border-gray-300 rounded-md">
+        <table className="w-full border-separate border border-gray-300 rounded-md table-auto">
           <thead>
             <tr>
-              <th className="font-light text-sm">Task name</th>
-              <th className="font-light text-sm">Due date</th>
-              <th className="font-light text-sm">Tag</th>
-              <th className="font-light text-sm">Note</th>
-              <th className="font-light text-sm">Actions</th>
+              <th className="font-light text-sm text-left"></th>
+              <th className="flex items-center font-light text-sm text-left">
+                <HiMenuAlt1 className="mr-2" />
+                Task name
+              </th>
+              <th className="font-light text-sm text-left">Due date</th>
+              <th className="font-light text-sm text-left">Tag</th>
+              <th className="font-light text-sm text-left">Note</th>
+              <th className="font-light text-sm text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {tasks.map((task) => (
-              <tr key={task.task_id}>
+              <tr key={task.task_id} className="divide-y divide-solid">
+                <td>
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 rounded"
+                      checked={task.done_flag}
+                      onChange={async (e) => {
+                        const newDoneFlag = e.target.checked;
+                        await updateOneTask({
+                          variables: {
+                            taskId: parseInt(task.task_id, 10),
+                            doneFlag: { set: newDoneFlag },
+                          },
+                        });
+                        setTasks((prevTasks) =>
+                          prevTasks.map((t) =>
+                            t.task_id === task.task_id
+                              ? { ...t, done_flag: newDoneFlag }
+                              : t
+                          )
+                        );
+                      }}
+                    />
+                  </div>
+                </td>
                 <td>{task.task_name}</td>
                 <td>{task.due_date}</td>
                 <td>{task.tags}</td>
                 <td>{task.notes}</td>
                 <td>
-                  <button>Edit</button>
-                  <button>Delete</button>
+                  <button>
+                    <HiOutlinePencil className="mr-2" />
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await updateOneTask({
+                        variables: {
+                          taskId: parseInt(task.task_id, 10),
+                          deletedFlag: { set: true },
+                        },
+                      });
+                      setTasks((prevTasks) =>
+                        prevTasks.filter((t) => t.task_id !== task.task_id)
+                      );
+                    }}
+                  >
+                    <HiOutlineTrash className="mr-2" />
+                  </button>
                 </td>
               </tr>
             ))}

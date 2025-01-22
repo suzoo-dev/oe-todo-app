@@ -11,7 +11,7 @@ export class TaskResolver {
     }
 
     return ctx.prisma.task.findMany({
-      where: { owner_id: userId },
+      where: { owner_id: userId, deleted_flag: false },
     });
   }
 
