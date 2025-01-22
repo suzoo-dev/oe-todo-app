@@ -21,14 +21,14 @@ datasource db {
 model Task {
   task_id Int @id @default(autoincrement())
   task_name String
-  done_flag Boolean
-  due_date DateTime
-  tags String
-  notes String
+  done_flag Boolean @default(false) 
+  due_date DateTime?
+  tags String?
+  notes String?
   owner User @relation(fields: [owner_id], references: [user_id])
   owner_id Int 
   task_created_at DateTime @default(now())
-  deleted_flag Boolean
+  deleted_flag Boolean @default(false)
 }
 
 model User {

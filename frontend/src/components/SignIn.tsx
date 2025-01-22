@@ -1,6 +1,34 @@
-import React, { useState, useEffect } from "react";
-import useQuery from "../hooks/useQuery";
+import React, { useState } from "react";
+import { useMutation, gql } from "@apollo/client";
 import { useAuth } from "../context/AuthContext";
+
+const LOGIN_MUTATION = gql`
+  mutation Login($email: String!, $password: String!) {
+    login(email: $email, password: $password) {
+      token
+      userId
+    }
+  }
+`;
+
+const SIGNUP_MUTATION = gql`
+  mutation Signup(
+    $email: String!
+    $username: String!
+    $password: String!
+    $confirmPassword: String!
+  ) {
+    signup(
+      email: $email
+      username: $username
+      password: $password
+      confirmPassword: $confirmPassword
+    ) {
+      token
+      userId
+    }
+  }
+`;
 
 const SignIn: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
@@ -10,7 +38,6 @@ const SignIn: React.FC = () => {
     password: "",
     confirmPassword: "",
   });
-  const [errorMessage, setErrorMessage] = useState("");
   const { signIn } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,30 +45,21 @@ const SignIn: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const [executeQuery, { data, isLoading, error }] = useQuery<{
-    login: string;
-    signup: string;
-  }>();
+  const [loginMutation] = useMutation(LOGIN_MUTATION);
+  const [signupMutation] = useMutation(SIGNUP_MUTATION);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const mutation = isRegistering
-      ? `mutation { signup(email: "${formData.email}", username: "${formData.username}", password: "${formData.password}", confirmPassword: "${formData.confirmPassword}") }`
-      : `mutation { login(email: "${formData.email}", password: "${formData.password}") }`;
+    const mutation = isRegistering ? signupMutation : loginMutation;
+    const { data } = await mutation({ variables: { ...formData } });
 
-    await executeQuery(mutation);
-  };
-
-  useEffect(() => {
-    if (error) {
-      setErrorMessage(error);
-    } else if (data) {
-      const token = isRegistering ? data.signup : data.login;
-      if (token) {
-        signIn(token);
+    if (data) {
+      const { token, userId } = isRegistering ? data.signup : data.login;
+      if (token && userId) {
+        signIn(token, userId); // Call signIn with token and userId
       }
     }
-  }, [data, error, isRegistering, signIn]);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
@@ -53,8 +71,6 @@ const SignIn: React.FC = () => {
         <h2 className="text-lg mb-12">
           get things done{String.fromCodePoint(0x2728)}
         </h2>
-        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-        {isLoading && <p className="text-gray-500">...loading</p>}
         <form onSubmit={handleSubmit}>
           <label>Enter your email</label>
           <input

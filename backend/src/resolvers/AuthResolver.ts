@@ -1,18 +1,27 @@
-import { Resolver, Mutation, Arg, Ctx } from "type-graphql";
+import { Resolver, Mutation, Arg, Ctx, ObjectType, Field } from "type-graphql";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { getEnvVar } from "../utils/getEnvVar";
 
+@ObjectType()
+class AuthPayload {
+  @Field()
+  token!: string;
+
+  @Field()
+  userId!: string;
+}
+
 @Resolver()
 export class AuthResolver {
-  @Mutation(() => String)
+  @Mutation(() => AuthPayload)
   async signup(
     @Arg("email") email: string,
     @Arg("username") username: string,
     @Arg("password") password: string,
     @Arg("confirmPassword") confirmPassword: string,
     @Ctx() ctx: any
-  ): Promise<string> {
+  ): Promise<AuthPayload> {
     if (password !== confirmPassword) {
       throw new Error("Passwords do not match");
     }
@@ -23,15 +32,15 @@ export class AuthResolver {
     });
 
     const token = jwt.sign({ userId: user.user_id }, getEnvVar("JWT_SECRET"));
-    return token;
+    return { token, userId: user.user_id };
   }
 
-  @Mutation(() => String)
+  @Mutation(() => AuthPayload)
   async login(
     @Arg("email") email: string,
     @Arg("password") password: string,
     @Ctx() ctx: any
-  ): Promise<string> {
+  ): Promise<AuthPayload> {
     const user = await ctx.prisma.user.findUnique({ where: { email } });
     if (!user) {
       throw new Error("User not found");
@@ -43,6 +52,6 @@ export class AuthResolver {
     }
 
     const token = jwt.sign({ userId: user.user_id }, getEnvVar("JWT_SECRET"));
-    return token;
+    return { token, userId: user.user_id };
   }
 }

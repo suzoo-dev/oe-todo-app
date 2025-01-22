@@ -1,20 +1,29 @@
-import { Resolver, Mutation, Arg, Ctx } from "type-graphql";
-import { Task } from "../../prisma/generated/type-graphql"; // Adjust the import based on your generated types
+import { Resolver, Mutation, Query, Arg, Ctx } from "type-graphql";
+import { Task } from "../../prisma/generated/type-graphql";
 
 @Resolver()
 export class TaskResolver {
+  @Query(() => [Task])
+  async getUserTasks(@Ctx() ctx: any): Promise<Task[]> {
+    const userId = ctx.user;
+    if (!userId) {
+      throw new Error("User not authenticated");
+    }
+
+    return ctx.prisma.task.findMany({
+      where: { owner_id: userId },
+    });
+  }
+
   @Mutation(() => Task)
-  async addTask(
+  async createUserTask(
     @Arg("task_name") taskName: string,
-    @Arg("done_flag", { nullable: true }) doneFlag: boolean | null = null,
-    @Arg("due_date", { nullable: true }) dueDate: Date | null = null,
     @Ctx() ctx: any
   ): Promise<Task> {
     const task = await ctx.prisma.task.create({
       data: {
         task_name: taskName,
-        done_flag: doneFlag ?? false, // Default to false if not provided
-        due_date: dueDate ?? null, // Default to current date if not provided
+        owner_id: ctx.user,
       },
     });
     return task;

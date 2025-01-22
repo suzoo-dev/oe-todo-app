@@ -3,7 +3,8 @@ import React, { createContext, useContext, useState } from "react";
 // Define the shape of the authentication context
 interface AuthContextType {
   isAuthenticated: boolean;
-  signIn: (token: string) => void; // Accept token as parameter
+  userId: string | null;
+  signIn: (token: string, userId: string) => void; // Accept token and userId as parameters
   signOut: () => void;
 }
 
@@ -14,20 +15,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const token = localStorage.getItem("token");
+    return token !== null; // Check if token exists
+  });
 
-  const signIn = (token: string) => {
+  const [userId, setUserId] = useState<string | null>(null);
+
+  const signIn = (token: string, userId: string) => {
     localStorage.setItem("token", token); // Store token in local storage
+    setUserId(userId); // Set the userId in state
+    setIsAuthenticated(true);
+    localStorage.setItem("userId", userId); // Store userId in local storage
+
+    localStorage.setItem("token", token); // Store token in local storage
+    setUserId(userId); // Set the userId in state
     setIsAuthenticated(true);
   };
 
   const signOut = () => {
     localStorage.removeItem("token"); // Remove token from local storage
+    setUserId(null); // Clear the userId from state
     setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, signIn, signOut }}>
+    <AuthContext.Provider value={{ isAuthenticated, userId, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
