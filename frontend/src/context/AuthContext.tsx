@@ -35,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signOut = () => {
     localStorage.removeItem("token"); // Remove token from local storage
+    localStorage.removeItem("userId"); // Remove userId from local storage
     setUserId(null); // Clear the userId from state
     setIsAuthenticated(false);
   };

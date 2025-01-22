@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, gql } from "@apollo/client";
-import { HiMenuAlt1, HiOutlinePencil, HiOutlineTrash } from "react-icons/hi";
+import {
+  HiMenuAlt1,
+  HiOutlineTrash,
+  HiOutlineLockClosed,
+} from "react-icons/hi";
+import { useAuth } from "../context/AuthContext";
 
 const GET_USER_TASKS = gql`
   query GetUserTasks {
@@ -57,9 +62,11 @@ interface Task {
 }
 
 const Task: React.FC = () => {
+  const { signOut } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskName, setNewTaskName] = useState<string>("");
   const [isAddingTask, setIsAddingTask] = useState<boolean>(false);
+  const [searchInput, setSearchInput] = useState<string>("");
 
   const { data } = useQuery(GET_USER_TASKS);
 
@@ -98,17 +105,31 @@ const Task: React.FC = () => {
     setIsAddingTask(false);
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+  };
+
+  const filteredTasks = tasks.filter((task) =>
+    task.task_name.toLowerCase().includes(searchInput.toLowerCase())
+  );
+
   return (
     <div className="flex flex-col bg-white m-6">
       <div className="flex flex-row justify-between items-center h-[100px]">
         <h2 className="text-3xl font-bold mb-2">My Tasks for the next month</h2>
-        <div>
+        <div className="flex flex-row items-center">
           <input
             className="rounded-md border border-gray-300 mr-2 p-2"
             placeholder="Search"
+            value={searchInput}
+            onChange={handleSearchChange}
           />
-          <button className="border border-gray-950 rounded-md p-2">
-            logout
+          <button
+            className="flex flex-row items-center border border-gray-950 rounded-md p-2"
+            onClick={signOut}
+          >
+            <HiOutlineLockClosed className="mr-2" />
+            Logout
           </button>
         </div>
       </div>
@@ -137,7 +158,7 @@ const Task: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {tasks.map((task) => (
+            {filteredTasks.map((task) => (
               <tr key={task.task_id} className="divide-y divide-solid">
                 <td>
                   <div className="flex items-center justify-center">
@@ -169,9 +190,6 @@ const Task: React.FC = () => {
                 <td>{task.tags}</td>
                 <td>{task.notes}</td>
                 <td>
-                  <button>
-                    <HiOutlinePencil className="mr-2" />
-                  </button>
                   <button
                     onClick={async () => {
                       await updateOneTask({
