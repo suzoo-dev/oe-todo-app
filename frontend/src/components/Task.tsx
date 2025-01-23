@@ -146,21 +146,21 @@ const Task: React.FC = () => {
         <table className="w-full border-separate border border-gray-300 rounded-md table-auto">
           <thead>
             <tr>
-              <th className="font-light text-sm text-left"></th>
-              <th className="flex items-center font-light text-sm text-left">
+              <th className="font-light text-sm text-left p-2"></th>
+              <th className="flex items-center font-light text-sm text-left p-2">
                 <HiMenuAlt1 className="mr-2" />
                 Task name
               </th>
-              <th className="font-light text-sm text-left">Due date</th>
-              <th className="font-light text-sm text-left">Tag</th>
-              <th className="font-light text-sm text-left">Note</th>
-              <th className="font-light text-sm text-left">Actions</th>
+              <th className="font-light text-sm text-left p-2">Due date</th>
+              <th className="font-light text-sm text-left p-2">Tag</th>
+              <th className="font-light text-sm text-left p-2">Note</th>
+              <th className="font-light text-sm text-left p-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredTasks.map((task) => (
               <tr key={task.task_id} className="divide-y divide-solid">
-                <td>
+                <td className="p-3">
                   <div className="flex items-center justify-center">
                     <input
                       type="checkbox"
@@ -190,26 +190,29 @@ const Task: React.FC = () => {
                 <td>{task.tags}</td>
                 <td>{task.notes}</td>
                 <td>
-                  <button
-                    onClick={async () => {
-                      await updateOneTask({
-                        variables: {
-                          taskId: parseInt(task.task_id, 10),
-                          deletedFlag: { set: true },
-                        },
-                      });
-                      setTasks((prevTasks) =>
-                        prevTasks.filter((t) => t.task_id !== task.task_id)
-                      );
-                    }}
-                  >
-                    <HiOutlineTrash className="mr-2" />
-                  </button>
+                  <div className="flex items-center ">
+                    <button
+                      onClick={async () => {
+                        await updateOneTask({
+                          variables: {
+                            taskId: parseInt(task.task_id, 10),
+                            deletedFlag: { set: true },
+                          },
+                        });
+                        setTasks((prevTasks) =>
+                          prevTasks.filter((t) => t.task_id !== task.task_id)
+                        );
+                      }}
+                    >
+                      <HiOutlineTrash className="mr-2 h-5 w-5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
             {isAddingTask && (
               <tr>
+                <td></td>
                 <td>
                   <input
                     type="text"
