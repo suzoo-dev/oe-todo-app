@@ -45,6 +45,7 @@ Here is the list of tasks with their current status:
 
 During the development of this Todo App, I focused on the following key areas:
 
+- **Planning and Database Design**: I spent some time planning out the project which can be seen in the system design and ERD image.
 - **GraphQL and Resolvers**: I implemented a GraphQL API to handle data queries and mutations. This was adventurous for me as first time setting this up. I used Prisma to generate the schema based on the plan I had made, I then also generated some resolvers to handle common queries and mutations for each model. I then wrote custom resolvers for the tasks and users.
 - **Authentication**: I roled my own authentication system, this is quite basic and I would certainly improve on the validation for the form and increasing the password complexity requirements.
 - **Weather API Integration**: I integrated the weather.com API to display the weather for cities mentioned in tasks. I approached this by finding a list of cities and converting these into a map. This could then be used efficiently to search for city names and look up the weather details from the API.
@@ -54,4 +55,4 @@ However, there are still areas that require improvement:
 - **Component Composition**: I would like to spend more time improving the component composition, particularly in the table component. Currently, it displays both todo and completed tasks in a single table. Ideally, I would like to split the table into a reusable component and pass in either completed or todo tasks from the parent component.
 - **Responsiveness**: I haven't had the opportunity to focus on responsiveness, which is crucial for a modern web application. I would like to revisit the design and ensure that it adapts well to different screen sizes and devices.
 - **Error Handling**: I would like to improve error handling throughout the application. There aren't any Error Boundaries in place, and I would like to implement them to provide a better user experience when errors occur.
-- **Weather API**: I would like to improve this in line with the original plan I'd made, this was to have this with a cache to reduce the number of requests being made to an external API.
+- **Weather API**: I would like to improve this in line with the original plan I'd made which was to have this with a cache to reduce the number of requests being made to an external API.
